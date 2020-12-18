@@ -4,7 +4,6 @@ import contextlib
 import inspect
 import io
 import os
-import sandbox
 import sys
 from typing import List, Optional, Tuple
 import types
@@ -48,9 +47,8 @@ class PyTalk(ui.MainWindow):
 
         self.shared_globals = {
             '__builtins__': __builtins__,
-            '__main__': sys.modules[__name__],
-            'pytalk': self,
-            'sandbox': sandbox,
+            # '__main__': sys.modules[__name__],
+            'self': self,
             'unload': self.unload,
         }
 
@@ -68,7 +66,22 @@ class PyTalk(ui.MainWindow):
         self.opened_file_path: str = ''
         self.text_to_find: str = ''
 
+        self.clear_pop_up_menu()
+        self.set_icon()
+
         self.set_status('Ready')
+
+    def set_icon(self):
+        icon_path = os.path.join(sys.path[0], 'pytalk.ico')
+        icon = wx.Icon()
+        icon.CopyFromBitmap(wx.Bitmap(icon_path, wx.BITMAP_TYPE_ANY))
+        self.SetIcon(icon)
+
+    def clear_pop_up_menu(self) -> None:
+        for index, (menu, label) in enumerate(self.m_menubar_main.GetMenus()):
+            if label[:2] == '__':
+                self.m_menubar_main.SetMenuLabel(index, '')
+                menu.Detach()
 
     def update_file_list(self) -> None:
         #
@@ -192,8 +205,13 @@ class PyTalk(ui.MainWindow):
 
     def unload(self, module):
         """Unload module from shared_globals."""
+        self.unload_module_with_name(module.__name__)
+
+    def unload_module_with_name(self, module_name: str) -> None:
+        """Unload module from shared_globals."""
+        print('Unloading', module_name)
+
         try:
-            module_name = module.__name__
             # Delete from current process.
             del sys.modules[module_name]
             # Delete from child process.
@@ -251,9 +269,21 @@ class PyTalk(ui.MainWindow):
                            style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST) as fileDialog:
             if fileDialog.ShowModal() == wx.ID_CANCEL:
                 return
-            self.set_opened_file_path(fileDialog.GetPath())
+            self.load_from_file(fileDialog.GetPath())
 
         with open(self.opened_file_path, 'rt') as file:
+            code = file.read()
+            self.pages.playground.SetValue(code)
+
+    def load_from_file(self, file_path: str):
+        self.new_playground()
+        # If file opened or playground is not empty!
+        if self.opened_file_path != '' or len(self.pages.playground.GetValue()) != 0:
+            return
+
+        self.set_opened_file_path(file_path)
+
+        with open(file_path, 'rt') as file:
             code = file.read()
             self.pages.playground.SetValue(code)
 
@@ -437,12 +467,14 @@ class PyTalk(ui.MainWindow):
         found = page.GetValue().find(text, position)
         if found > 0:
             page.SetSelection(found, found + len(text))
+            page.ScrollIntoView(found, wx.WXK_DOWN)
             page.SetFocus()
         else:
             # Find from start position.
             found = page.GetValue().find(text, 0)
             if found > 0:
                 page.SetSelection(found, found + len(text))
+                page.ScrollIntoView(found, wx.WXK_UP)
                 page.SetFocus()
             else:
                 wx.MessageBox('Cannot find ' + text, 'Find in text')
@@ -513,33 +545,94 @@ class PyTalk(ui.MainWindow):
         self.active_page = self.m_rich_text_help
         event.Skip()
 
+    def on_tree_list_item_context_menu(self, event):
+        self.PopupMenu(self.m_menu_popup_file)
+
+    def on_grid_cell_right_click_module(self, event):
+        self.PopupMenu(self.m_menu_popup_module)
+
+    def on_grid_cell_right_click_object(self, event):
+        self.PopupMenu(self.m_menu_popup_object)
+
+    def on_right_down_code(self, event):
+        self.PopupMenu(self.m_menu_popup_code)
+
+    def on_right_down_playground(self, event):
+        self.PopupMenu(self.m_menu_popup_playground)
+
+    def on_right_down_output(self, event):
+        self.PopupMenu(self.m_menu_popup_output)
+
+    def on_right_down_help(self, event):
+        self.PopupMenu(self.m_menu_popup_help)
+
+    def on_menu_selection_open_selected_file(self, event):
+        file_path = self.get_selected_file_path()
+        if file_path != '':
+            self.load_from_file(file_path)
+
+    def get_selected_file_path(self) -> str:
+        tree_list_item = self.pages.file_list.GetSelection()
+        file_path = self.pages.file_list.GetItemText(tree_list_item)
+
+        return file_path
+
+    def get_selected_module_name(self, event) -> str:
+        cursor_row = self.m_grid_module.GetGridCursorRow()
+        if cursor_row < 0:
+            self.set_status('No module selected!')
+            return ''
+        return self.m_grid_module.GetCellValue(cursor_row, 0)
+
+    def on_menu_selection_reload_module(self, event):
+        module_name = self.get_selected_module_name(event)
+        if module_name != '':
+            self.unload_module_with_name(module_name)
+            self.execute('import ' + module_name)
+
+    def on_menu_selection_unload_module(self, event):
+        module_name = self.get_selected_module_name(event)
+        if module_name != '':
+            self.unload_module_with_name(module_name)
+        self.update_module_list()
+
+    def on_menu_selection_copy_name(self, event):
+        event.Skip()
+
+    def on_menu_selection_copy_value(self, event):
+        event.Skip()
+
+    def on_menu_selection_copy_path(self, event):
+        event.Skip()
+
 
 def main() -> None:
     """Main function."""
     app = wx.App()
     pytalk = PyTalk(None)
     entries = [
-        (wx.ACCEL_CTRL, 'N', pytalk.m_menu_item_file_new.GetId()),
-        (wx.ACCEL_CTRL, 'O', pytalk.m_menu_item_file_open.GetId()),
-        (wx.ACCEL_CTRL, 'S', pytalk.m_menu_item_file_save.GetId()),
-        (wx.ACCEL_CTRL + wx.ACCEL_ALT, 'S', pytalk.m_menu_item_file_save_as.GetId()),
-        (wx.ACCEL_CTRL, 'U', pytalk.m_menu_item_command_update_module_list.GetId()),
-        (wx.ACCEL_CTRL, 'D', pytalk.m_menu_item_command_do_selection.GetId()),
-        (wx.ACCEL_CTRL + wx.ACCEL_ALT, 'D', pytalk.m_menu_item_command_do_all.GetId()),
-        (wx.ACCEL_CTRL, 'P', pytalk.m_menu_item_command_print_selection.GetId()),
-        (wx.ACCEL_CTRL, 'L', pytalk.m_menu_item_command_clear_output.GetId()),
-        (wx.ACCEL_CTRL, 'H', pytalk.m_menu_item_command_help_on_selection.GetId()),
-        (wx.ACCEL_CTRL, 'F', pytalk.m_menu_item_tool_find_text.GetId()),
-        (wx.ACCEL_CTRL, 'G', pytalk.m_menu_item_tool_find_next.GetId()),
-        (wx.ACCEL_CTRL, '1', pytalk.m_menu_item_show_file.GetId()),
-        (wx.ACCEL_CTRL, '2', pytalk.m_menu_item_show_module.GetId()),
-        (wx.ACCEL_CTRL, '3', pytalk.m_menu_item_show_object.GetId()),
-        (wx.ACCEL_CTRL, '4', pytalk.m_menu_item_show_code.GetId()),
-        (wx.ACCEL_CTRL, '5', pytalk.m_menu_item_show_playground.GetId()),
-        (wx.ACCEL_CTRL, '6', pytalk.m_menu_item_show_output.GetId()),
-        (wx.ACCEL_CTRL, '7', pytalk.m_menu_item_show_help.GetId()),
+        (wx.ACCEL_CTRL, ord('N'), pytalk.m_menu_item_file_new.GetId()),
+        (wx.ACCEL_CTRL, ord('O'), pytalk.m_menu_item_file_open.GetId()),
+        (wx.ACCEL_CTRL, ord('S'), pytalk.m_menu_item_file_save.GetId()),
+        (wx.ACCEL_CTRL + wx.ACCEL_ALT, ord('S'), pytalk.m_menu_item_file_save_as.GetId()),
+        (wx.ACCEL_CTRL, ord('U'), pytalk.m_menu_item_command_update_module_list.GetId()),
+        (wx.ACCEL_CTRL, ord('D'), pytalk.m_menu_item_command_do_selection.GetId()),
+        (wx.ACCEL_CTRL + wx.ACCEL_ALT, ord('D'), pytalk.m_menu_item_command_do_all.GetId()),
+        (wx.ACCEL_CTRL, ord('P'), pytalk.m_menu_item_command_print_selection.GetId()),
+        (wx.ACCEL_CTRL, ord('L'), pytalk.m_menu_item_command_clear_output.GetId()),
+        (wx.ACCEL_CTRL, ord('H'), pytalk.m_menu_item_command_help_on_selection.GetId()),
+        (0, wx.WXK_F1, pytalk.m_menu_item_command_help_on_selection.GetId()),
+        (wx.ACCEL_CTRL, ord('F'), pytalk.m_menu_item_tool_find_text.GetId()),
+        (wx.ACCEL_CTRL, ord('G'), pytalk.m_menu_item_tool_find_next.GetId()),
+        (wx.ACCEL_CTRL, ord('1'), pytalk.m_menu_item_show_file.GetId()),
+        (wx.ACCEL_CTRL, ord('2'), pytalk.m_menu_item_show_module.GetId()),
+        (wx.ACCEL_CTRL, ord('3'), pytalk.m_menu_item_show_object.GetId()),
+        (wx.ACCEL_CTRL, ord('4'), pytalk.m_menu_item_show_code.GetId()),
+        (wx.ACCEL_CTRL, ord('5'), pytalk.m_menu_item_show_playground.GetId()),
+        (wx.ACCEL_CTRL, ord('6'), pytalk.m_menu_item_show_output.GetId()),
+        (wx.ACCEL_CTRL, ord('7'), pytalk.m_menu_item_show_help.GetId()),
     ]
-    entries = [wx.AcceleratorEntry(flags=flags, keyCode=ord(key), cmd=cmd) for flags, key, cmd in entries]
+    entries = [wx.AcceleratorEntry(flags=flags, keyCode=key_code, cmd=cmd_id) for flags, key_code, cmd_id in entries]
     pytalk.SetAcceleratorTable(wx.AcceleratorTable(entries))
     pytalk.Show(True)
     app.MainLoop()

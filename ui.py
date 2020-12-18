@@ -71,7 +71,7 @@ class MainWindow ( wx.Frame ):
 		self.m_menu_item_command_clear_output = wx.MenuItem( self.m_menu_command, wx.ID_ANY, u"Clear output"+ u"\t" + u"Ctrl+L", wx.EmptyString, wx.ITEM_NORMAL )
 		self.m_menu_command.Append( self.m_menu_item_command_clear_output )
 
-		self.m_menu_item_command_help_on_selection = wx.MenuItem( self.m_menu_command, wx.ID_ANY, u"Help on selection"+ u"\t" + u"Ctrl+H", wx.EmptyString, wx.ITEM_NORMAL )
+		self.m_menu_item_command_help_on_selection = wx.MenuItem( self.m_menu_command, wx.ID_ANY, u"Help on selection"+ u"\t" + u"F1, Ctrl+H", wx.EmptyString, wx.ITEM_NORMAL )
 		self.m_menu_command.Append( self.m_menu_item_command_help_on_selection )
 
 		self.m_menubar_main.Append( self.m_menu_command, u"Command" )
@@ -132,6 +132,60 @@ class MainWindow ( wx.Frame ):
 
 		self.m_menubar_main.Append( self.m_menu_help, u"Help" )
 
+		self.m_menu_popup_file = wx.Menu()
+		self.m_menu_item_open_selected = wx.MenuItem( self.m_menu_popup_file, wx.ID_ANY, u"Open selected file", wx.EmptyString, wx.ITEM_NORMAL )
+		self.m_menu_popup_file.Append( self.m_menu_item_open_selected )
+
+		self.m_menubar_main.Append( self.m_menu_popup_file, u"__File" )
+
+		self.m_menu_popup_module = wx.Menu()
+		self.m_menu_iItem_reload_module = wx.MenuItem( self.m_menu_popup_module, wx.ID_ANY, u"Reload selected module", wx.EmptyString, wx.ITEM_NORMAL )
+		self.m_menu_popup_module.Append( self.m_menu_iItem_reload_module )
+
+		self.m_menu_iItem_unload_module = wx.MenuItem( self.m_menu_popup_module, wx.ID_ANY, u"Unload selected module", wx.EmptyString, wx.ITEM_NORMAL )
+		self.m_menu_popup_module.Append( self.m_menu_iItem_unload_module )
+
+		self.m_menubar_main.Append( self.m_menu_popup_module, u"__Module" )
+
+		self.m_menu_popup_object = wx.Menu()
+		self.m_menu_item_copy_name = wx.MenuItem( self.m_menu_popup_object, wx.ID_ANY, u"Copy object name", wx.EmptyString, wx.ITEM_NORMAL )
+		self.m_menu_popup_object.Append( self.m_menu_item_copy_name )
+
+		self.m_menu_item_copy_value = wx.MenuItem( self.m_menu_popup_object, wx.ID_ANY, u"Copy object value", wx.EmptyString, wx.ITEM_NORMAL )
+		self.m_menu_popup_object.Append( self.m_menu_item_copy_value )
+
+		self.m_menubar_main.Append( self.m_menu_popup_object, u"__Object" )
+
+		self.m_menu_popup_code = wx.Menu()
+		self.m_menu_item_copy_path = wx.MenuItem( self.m_menu_popup_code, wx.ID_ANY, u"Copy path", wx.EmptyString, wx.ITEM_NORMAL )
+		self.m_menu_popup_code.Append( self.m_menu_item_copy_path )
+
+		self.m_menubar_main.Append( self.m_menu_popup_code, u"__Code" )
+
+		self.m_menu_popup_playground = wx.Menu()
+		self.m_menu_item_command_do_selection_in_playground = wx.MenuItem( self.m_menu_popup_playground, wx.ID_ANY, u"Do selection"+ u"\t" + u"Ctrl+D", wx.EmptyString, wx.ITEM_NORMAL )
+		self.m_menu_popup_playground.Append( self.m_menu_item_command_do_selection_in_playground )
+
+		self.m_menu_item_command_do_all_in_playground = wx.MenuItem( self.m_menu_popup_playground, wx.ID_ANY, u"Do all"+ u"\t" + u"Ctrl+Alt+D", wx.EmptyString, wx.ITEM_NORMAL )
+		self.m_menu_popup_playground.Append( self.m_menu_item_command_do_all_in_playground )
+
+		self.m_menu_item_command_print_selection_in_playground = wx.MenuItem( self.m_menu_popup_playground, wx.ID_ANY, u"Print selection"+ u"\t" + u"Ctrl+P", wx.EmptyString, wx.ITEM_NORMAL )
+		self.m_menu_popup_playground.Append( self.m_menu_item_command_print_selection_in_playground )
+
+		self.m_menubar_main.Append( self.m_menu_popup_playground, u"__Playground" )
+
+		self.m_menu_popup_output = wx.Menu()
+		self.m_menu_item_command_clear_output_in_output = wx.MenuItem( self.m_menu_popup_output, wx.ID_ANY, u"Clear output"+ u"\t" + u"Ctrl+L", wx.EmptyString, wx.ITEM_NORMAL )
+		self.m_menu_popup_output.Append( self.m_menu_item_command_clear_output_in_output )
+
+		self.m_menubar_main.Append( self.m_menu_popup_output, u"__Output" )
+
+		self.m_menu_popup_help = wx.Menu()
+		self.m_menu_item_command_help_on_selection_in_help = wx.MenuItem( self.m_menu_popup_help, wx.ID_ANY, u"Help on selection"+ u"\t" + u"Ctrl+H", wx.EmptyString, wx.ITEM_NORMAL )
+		self.m_menu_popup_help.Append( self.m_menu_item_command_help_on_selection_in_help )
+
+		self.m_menubar_main.Append( self.m_menu_popup_help, u"__Help" )
+
 		self.SetMenuBar( self.m_menubar_main )
 
 		b_sizer_main_outer = wx.BoxSizer( wx.VERTICAL )
@@ -139,6 +193,7 @@ class MainWindow ( wx.Frame ):
 		self.m_splitter_main_help = wx.SplitterWindow( self, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.SP_3D )
 		self.m_splitter_main_help.SetSashGravity( 1 )
 		self.m_splitter_main_help.Bind( wx.EVT_IDLE, self.m_splitter_main_helpOnIdle )
+		self.m_splitter_main_help.SetMinimumPaneSize( 100 )
 
 		self.m_panel_main = wx.Panel( self.m_splitter_main_help, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.TAB_TRAVERSAL )
 		b_sizer_main = wx.BoxSizer( wx.VERTICAL )
@@ -162,6 +217,7 @@ class MainWindow ( wx.Frame ):
 		self.m_splitter_file_object = wx.SplitterWindow( self.m_panel_file_object, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.SP_3D )
 		self.m_splitter_file_object.SetSashGravity( 0.5 )
 		self.m_splitter_file_object.Bind( wx.EVT_IDLE, self.m_splitter_file_objectOnIdle )
+		self.m_splitter_file_object.SetMinimumPaneSize( 100 )
 
 		self.m_panel_file_module = wx.Panel( self.m_splitter_file_object, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.TAB_TRAVERSAL )
 		b_sizer_file_module = wx.BoxSizer( wx.VERTICAL )
@@ -188,7 +244,7 @@ class MainWindow ( wx.Frame ):
 
 		b_sizer_module.Add( self.m_static_text_module_name, 0, wx.ALL|wx.EXPAND, 5 )
 
-		self.m_grid_module = wx.grid.Grid( self.m_panel_module, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, 0 )
+		self.m_grid_module = wx.grid.Grid( self.m_panel_module, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.BORDER_STATIC|wx.HSCROLL|wx.VSCROLL )
 
 		# Grid
 		self.m_grid_module.CreateGrid( 0, 2 )
@@ -248,7 +304,7 @@ class MainWindow ( wx.Frame ):
 
 		b_sizer_object.Add( b_sizer_object_name, 0, wx.EXPAND, 5 )
 
-		self.m_grid_object = wx.grid.Grid( self.m_panel_object, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, 0 )
+		self.m_grid_object = wx.grid.Grid( self.m_panel_object, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.BORDER_STATIC|wx.HSCROLL|wx.VSCROLL )
 
 		# Grid
 		self.m_grid_object.CreateGrid( 0, 2 )
@@ -334,11 +390,12 @@ class MainWindow ( wx.Frame ):
 		self.m_panel_playground_output = wx.Panel( self.m_splitter_file_playground, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.TAB_TRAVERSAL )
 		b_sizer_code_playground = wx.BoxSizer( wx.VERTICAL )
 
-		self.m_splitter_code_playground = wx.SplitterWindow( self.m_panel_playground_output, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.SP_3D )
-		self.m_splitter_code_playground.SetSashGravity( 1 )
-		self.m_splitter_code_playground.Bind( wx.EVT_IDLE, self.m_splitter_code_playgroundOnIdle )
+		self.m_splitter_playground_output = wx.SplitterWindow( self.m_panel_playground_output, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.SP_3D )
+		self.m_splitter_playground_output.SetSashGravity( 1 )
+		self.m_splitter_playground_output.Bind( wx.EVT_IDLE, self.m_splitter_playground_outputOnIdle )
+		self.m_splitter_playground_output.SetMinimumPaneSize( 100 )
 
-		self.m_panel_playground_outer = wx.Panel( self.m_splitter_code_playground, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.TAB_TRAVERSAL )
+		self.m_panel_playground_outer = wx.Panel( self.m_splitter_playground_output, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.TAB_TRAVERSAL )
 		b_sizer_playground_outer = wx.BoxSizer( wx.VERTICAL )
 
 		self.m_notebook_playground = wx.Notebook( self.m_panel_playground_outer, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, 0 )
@@ -367,7 +424,7 @@ class MainWindow ( wx.Frame ):
 		self.m_panel_playground_outer.SetSizer( b_sizer_playground_outer )
 		self.m_panel_playground_outer.Layout()
 		b_sizer_playground_outer.Fit( self.m_panel_playground_outer )
-		self.m_panel_output_outer = wx.Panel( self.m_splitter_code_playground, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.TAB_TRAVERSAL )
+		self.m_panel_output_outer = wx.Panel( self.m_splitter_playground_output, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.TAB_TRAVERSAL )
 		b_sizer_output_outer = wx.BoxSizer( wx.VERTICAL )
 
 		self.m_notebook_output = wx.Notebook( self.m_panel_output_outer, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, 0 )
@@ -391,14 +448,14 @@ class MainWindow ( wx.Frame ):
 		self.m_panel_output_outer.SetSizer( b_sizer_output_outer )
 		self.m_panel_output_outer.Layout()
 		b_sizer_output_outer.Fit( self.m_panel_output_outer )
-		self.m_splitter_code_playground.SplitHorizontally( self.m_panel_playground_outer, self.m_panel_output_outer, -200 )
-		b_sizer_code_playground.Add( self.m_splitter_code_playground, 1, wx.EXPAND, 5 )
+		self.m_splitter_playground_output.SplitHorizontally( self.m_panel_playground_outer, self.m_panel_output_outer, -200 )
+		b_sizer_code_playground.Add( self.m_splitter_playground_output, 1, wx.EXPAND, 5 )
 
 
 		self.m_panel_playground_output.SetSizer( b_sizer_code_playground )
 		self.m_panel_playground_output.Layout()
 		b_sizer_code_playground.Fit( self.m_panel_playground_output )
-		self.m_splitter_file_playground.SplitVertically( self.m_panel_file_object_code, self.m_panel_playground_output, 300 )
+		self.m_splitter_file_playground.SplitVertically( self.m_panel_file_object_code, self.m_panel_playground_output, 0 )
 		b_sizer_main.Add( self.m_splitter_file_playground, 1, wx.EXPAND, 5 )
 
 
@@ -466,13 +523,31 @@ class MainWindow ( wx.Frame ):
 		self.Bind( wx.EVT_MENU, self.on_menu_selection_show_output, id = self.m_menu_item_show_output.GetId() )
 		self.Bind( wx.EVT_MENU, self.on_menu_selection_show_help, id = self.m_menu_item_show_help.GetId() )
 		self.Bind( wx.EVT_MENU, self.on_menu_help_about, id = self.m_menu_item_about.GetId() )
+		self.Bind( wx.EVT_MENU, self.on_menu_selection_open_selected_file, id = self.m_menu_item_open_selected.GetId() )
+		self.Bind( wx.EVT_MENU, self.on_menu_selection_reload_module, id = self.m_menu_iItem_reload_module.GetId() )
+		self.Bind( wx.EVT_MENU, self.on_menu_selection_unload_module, id = self.m_menu_iItem_unload_module.GetId() )
+		self.Bind( wx.EVT_MENU, self.on_menu_selection_copy_name, id = self.m_menu_item_copy_name.GetId() )
+		self.Bind( wx.EVT_MENU, self.on_menu_selection_copy_value, id = self.m_menu_item_copy_value.GetId() )
+		self.Bind( wx.EVT_MENU, self.on_menu_selection_copy_path, id = self.m_menu_item_copy_path.GetId() )
+		self.Bind( wx.EVT_MENU, self.on_menu_command_do_selection, id = self.m_menu_item_command_do_selection_in_playground.GetId() )
+		self.Bind( wx.EVT_MENU, self.on_menu_command_do_all, id = self.m_menu_item_command_do_all_in_playground.GetId() )
+		self.Bind( wx.EVT_MENU, self.on_menu_command_print_selection, id = self.m_menu_item_command_print_selection_in_playground.GetId() )
+		self.Bind( wx.EVT_MENU, self.on_menu_command_clear_output, id = self.m_menu_item_command_clear_output_in_output.GetId() )
+		self.Bind( wx.EVT_MENU, self.on_menu_command_help_on_selection, id = self.m_menu_item_command_help_on_selection_in_help.GetId() )
+		self.m_tree_list_ctrl_file.Bind( wx.dataview.EVT_TREELIST_ITEM_CONTEXT_MENU, self.on_tree_list_item_context_menu )
+		self.m_grid_module.Bind( wx.grid.EVT_GRID_CELL_RIGHT_CLICK, self.on_grid_cell_right_click_module )
 		self.m_grid_module.Bind( wx.grid.EVT_GRID_SELECT_CELL, self.on_grid_select_cell_module )
 		self.m_button_object_backward.Bind( wx.EVT_BUTTON, self.on_button_click_object_backward )
 		self.m_grid_object.Bind( wx.grid.EVT_GRID_CELL_LEFT_DCLICK, self.on_grid_double_click_object )
+		self.m_grid_object.Bind( wx.grid.EVT_GRID_CELL_RIGHT_CLICK, self.on_grid_cell_right_click_object )
 		self.m_grid_object.Bind( wx.grid.EVT_GRID_SELECT_CELL, self.on_grid_select_cell_object )
+		self.m_rich_text_code.Bind( wx.EVT_RIGHT_DOWN, self.on_right_down_code )
 		self.m_rich_text_code.Bind( wx.EVT_SET_FOCUS, self.on_set_focus_code )
+		self.m_rich_text_playground.Bind( wx.EVT_RIGHT_DOWN, self.on_right_down_playground )
 		self.m_rich_text_playground.Bind( wx.EVT_SET_FOCUS, self.on_set_focus_playground )
+		self.m_rich_text_output.Bind( wx.EVT_RIGHT_DOWN, self.on_right_down_output )
 		self.m_rich_text_output.Bind( wx.EVT_SET_FOCUS, self.on_set_focus_output )
+		self.m_rich_text_help.Bind( wx.EVT_RIGHT_DOWN, self.on_right_down_help )
 		self.m_rich_text_help.Bind( wx.EVT_SET_FOCUS, self.on_set_focus_help )
 
 	def __del__( self ):
@@ -558,6 +633,35 @@ class MainWindow ( wx.Frame ):
 	def on_menu_help_about( self, event ):
 		event.Skip()
 
+	def on_menu_selection_open_selected_file( self, event ):
+		event.Skip()
+
+	def on_menu_selection_reload_module( self, event ):
+		event.Skip()
+
+	def on_menu_selection_unload_module( self, event ):
+		event.Skip()
+
+	def on_menu_selection_copy_name( self, event ):
+		event.Skip()
+
+	def on_menu_selection_copy_value( self, event ):
+		event.Skip()
+
+	def on_menu_selection_copy_path( self, event ):
+		event.Skip()
+
+
+
+
+
+
+	def on_tree_list_item_context_menu( self, event ):
+		event.Skip()
+
+	def on_grid_cell_right_click_module( self, event ):
+		event.Skip()
+
 	def on_grid_select_cell_module( self, event ):
 		event.Skip()
 
@@ -567,16 +671,31 @@ class MainWindow ( wx.Frame ):
 	def on_grid_double_click_object( self, event ):
 		event.Skip()
 
+	def on_grid_cell_right_click_object( self, event ):
+		event.Skip()
+
 	def on_grid_select_cell_object( self, event ):
+		event.Skip()
+
+	def on_right_down_code( self, event ):
 		event.Skip()
 
 	def on_set_focus_code( self, event ):
 		event.Skip()
 
+	def on_right_down_playground( self, event ):
+		event.Skip()
+
 	def on_set_focus_playground( self, event ):
 		event.Skip()
 
+	def on_right_down_output( self, event ):
+		event.Skip()
+
 	def on_set_focus_output( self, event ):
+		event.Skip()
+
+	def on_right_down_help( self, event ):
 		event.Skip()
 
 	def on_set_focus_help( self, event ):
@@ -587,7 +706,7 @@ class MainWindow ( wx.Frame ):
 		self.m_splitter_main_help.Unbind( wx.EVT_IDLE )
 
 	def m_splitter_file_playgroundOnIdle( self, event ):
-		self.m_splitter_file_playground.SetSashPosition( 300 )
+		self.m_splitter_file_playground.SetSashPosition( 0 )
 		self.m_splitter_file_playground.Unbind( wx.EVT_IDLE )
 
 	def m_splitter_file_object_codeOnIdle( self, event ):
@@ -598,9 +717,9 @@ class MainWindow ( wx.Frame ):
 		self.m_splitter_file_object.SetSashPosition( 0 )
 		self.m_splitter_file_object.Unbind( wx.EVT_IDLE )
 
-	def m_splitter_code_playgroundOnIdle( self, event ):
-		self.m_splitter_code_playground.SetSashPosition( -200 )
-		self.m_splitter_code_playground.Unbind( wx.EVT_IDLE )
+	def m_splitter_playground_outputOnIdle( self, event ):
+		self.m_splitter_playground_output.SetSashPosition( -200 )
+		self.m_splitter_playground_output.Unbind( wx.EVT_IDLE )
 
 
 ###########################################################################
